@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.role == 'Administrator' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrator');
+    }
+
+    function isDoctor() {
+      return isAuthenticated() &&
+        (request.auth.token.role == 'Doctor' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Doctor' ||
+         isAdmin());
+    }
+
+    // Users Collection: Doctors and Administrators
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Patients Collection: Protected Clinical & Caretaker Information
+    match /patients/{patientId} {
+      allow read: if isDoctor();
+      allow create, update: if isDoctor();
+      allow delete: if isAdmin();
+    }
+
+    // Monitoring Sessions: Telemetry session logs
+    match /monitoring_sessions/{sessionId} {
+      allow read: if isDoctor();
+      allow write: if isDoctor();
+    }
+
+    // EEG Recordings Metadata
+    match /eeg_recordings/{recordingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Predictions: High-resolution historical inference windows
+    match /predictions/{predictionId} {
+      allow read: if isDoctor();
+      allow create: if isDoctor();
+      allow update, delete: if isAdmin();
+    }
+
+    // Alerts: High-risk epileptiform episodes
+    match /alerts/{alertId} {
+      allow read: if isDoctor();
+      allow create, update: if isDoctor();
+      allow delete: if isAdmin();
+    }
+
+    // Notifications: Caretaker SMS audit records
+    match /notifications/{notificationId} {
+      allow read: if isDoctor();
+      allow write: if isDoctor();
+    }
+
+    // Settings: Global system configuration
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "model_name": "Random Forest Seizure Classifier",
+  "algorithm": "RandomForestClassifier",
+  "version": "1.0.0",
+  "features": [
+    "mean",
+    "std",
+    "rms",
+    "kurtosis",
+    "ptp_amplitude",
+    "line_length",
+    "delta_power",
+    "theta_power",
+    "alpha_power",
+    "beta_power",
+    "gamma_power",
+    "spectral_slowing_ratio",
+    "total_power"
+  ],
+  "n_estimators": 100,
+  "metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall_sensitivity": 1.0,
+    "specificity": 1.0,
+    "f1_score": 1.0,
+    "confusion_matrix": [
+      [
+        113,
+        0
+      ],
+      [
+        0,
+        112
+      ]
+    ],
+    "train_samples": 675,
+    "test_samples": 225
+  },
+  "feature_importances": {
+    "delta_power": 0.18,
+    "line_length": 0.1602,
+    "ptp_amplitude": 0.13,
+    "rms": 0.11,
+    "theta_power": 0.0802,
+    "std": 0.08,
+    "alpha_power": 0.08,
+    "total_power": 0.08,
+    "spectral_slowing_ratio": 0.07,
+    "kurtosis": 0.0296,
+    "mean": 0.0,
+    "beta_power": 0.0,
+    "gamma_power": 0.0
+  },
+  "sampling_rate": 256,
+  "window_duration_sec": 2.0,
+  "trained_at": "2026-10-11T14:30:00Z"
+}

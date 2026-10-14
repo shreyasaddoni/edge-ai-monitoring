@@ -1,0 +1,17 @@
+{
+  "features": [
+    "mean",
+    "std",
+    "rms",
+    "kurtosis",
+    "ptp_amplitude",
+    "line_length",
+    "delta_power",
+    "theta_power",
+    "alpha_power",
+    "beta_power",
+    "gamma_power",
+    "spectral_slowing_ratio",
+    "total_power"
+  ]
+}

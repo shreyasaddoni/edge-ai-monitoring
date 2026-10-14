@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#060911" />
+    </linearGradient>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="45%" stop-color="#14B8A6" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Base Medical Slate Badge -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bgGrad)" stroke="#0D9488" stroke-width="2.5" />
+
+  <!-- Subtle AI Circuit Nodes -->
+  <circle cx="14" cy="14" r="1.5" fill="#334155" />
+  <circle cx="50" cy="14" r="1.5" fill="#334155" />
+  <circle cx="14" cy="50" r="1.5" fill="#334155" />
+  <circle cx="50" cy="50" r="1.5" fill="#334155" />
+
+  <!-- Brain Neural Arc -->
+  <path d="M22 22 C22 15, 42 15, 42 22 C46 24, 48 29, 46 33" stroke="#0EA5E9" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2 3" opacity="0.65" />
+
+  <!-- Dynamic EEG Seizure / Pulse Telemetry Waveform -->
+  <path d="M8 35 L19 35 L23 24 L27 45 L32 14 L36 49 L40 29 L44 37 L54 37" 
+        stroke="url(#waveGrad)" 
+        stroke-width="3.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        filter="url(#glow)" />
+
+  <!-- Active Telemetry Pulse Leading Dot -->
+  <circle cx="54" cy="37" r="3" fill="#34D399" filter="url(#glow)" />
+  <circle cx="32" cy="14" r="2" fill="#38BDF8" />
+</svg>

@@ -1,0 +1,69 @@
+# ==============================================================================
+# Edge AI Epilepsy Monitoring - Git Ignore Configuration
+# ==============================================================================
+
+# Environment files & Secrets (Strictly Excluded)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*serviceAccount*.json
+*credentials*.json
+firebase_credentials.json
+
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Node & Frontend Build
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+dist-ssr/
+*.local
+
+# Database & Runtime Uploads
+*.sqlite
+*.sqlite3
+*.db
+backend/data/*.sqlite
+backend/data/*.db
+backend/uploads/eeg/*
+!backend/uploads/eeg/.gitkeep
+!backend/data/.gitkeep
+
+# Large Datasets & EEG Recordings
+Dataset/
+*.edf
+
+# Logs & Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE & OS Metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
