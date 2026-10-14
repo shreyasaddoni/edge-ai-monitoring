@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = '/api';
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = RAW_BASE ? `${RAW_BASE.replace(/\/$/, '')}/api` : '/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -55,7 +56,7 @@ export const api = {
   }),
   getUploadedRecordings: (params) => apiClient.get('/upload/recordings', { params }),
   generateSampleEdf: (pattern, patientId) => apiClient.post('/upload/generate-sample', { pattern, patientId }),
-  getDownloadUrl: (recordingId) => `/api/upload/download/${recordingId}`,
+  getDownloadUrl: (recordingId) => `${API_BASE}/upload/download/${recordingId}`,
 
   // Continuous Playback Engine
   getActivePlayback: (params) => apiClient.get('/playback/active', { params }),
@@ -87,9 +88,9 @@ export const api = {
   getDashboardStats: () => apiClient.get('/dashboard/stats'),
   getHistory: (params) => apiClient.get('/reports/history', { params }),
   exportCsv: (params) => apiClient.get('/reports/export-csv', { params, responseType: 'blob' }),
-  getExportCsvUrl: (patientId) => `/api/reports/export-csv${patientId ? `?patientId=${patientId}` : ''}`,
+  getExportCsvUrl: (patientId) => `${API_BASE}/reports/export-csv${patientId ? `?patientId=${patientId}` : ''}`,
   exportPdf: (params) => apiClient.get('/reports/export-pdf', { params, responseType: 'blob' }),
-  getExportPdfUrl: (patientId) => `/api/reports/export-pdf${patientId ? `?patientId=${patientId}` : ''}`,
+  getExportPdfUrl: (patientId) => `${API_BASE}/reports/export-pdf${patientId ? `?patientId=${patientId}` : ''}`,
 
   // Settings & System
   getSettings: () => apiClient.get('/settings'),

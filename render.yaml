@@ -1,0 +1,27 @@
+services:
+  # Python Flask Backend Web Service
+  - type: web
+    name: edge-ai-monitoring-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: USE_LOCAL_FALLBACK_DB
+        value: "true"
+
+  # React Vite Frontend Static Site
+  - type: web
+    name: edge-ai-monitoring-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -11,8 +11,8 @@ load_dotenv(BASE_DIR / ".env", override=True)
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "edge-ai-epilepsy-monitoring-secret-key-2026")
     FLASK_ENV = os.getenv("FLASK_ENV", "development")
-    FLASK_HOST = os.getenv("FLASK_HOST", "127.0.0.1")
-    FLASK_PORT = int(os.getenv("FLASK_PORT", 5000))
+    FLASK_HOST = os.getenv("FLASK_HOST", "0.0.0.0" if (os.getenv("PORT") or os.getenv("RENDER")) else "127.0.0.1")
+    FLASK_PORT = int(os.getenv("PORT", os.getenv("FLASK_PORT", 5000)))
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
     # Firebase Configuration
