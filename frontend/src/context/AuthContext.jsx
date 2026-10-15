@@ -97,44 +97,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('auth_token', res.data.token);
         return res.data.user;
       }
+      throw new Error("Unable to log in with provided credentials.");
     } catch (err) {
-      console.warn("Backend login API fallback:", err);
+      const errMsg = err.response?.data?.error || err.message || "Invalid email or password. Please verify your credentials.";
+      throw new Error(errMsg);
     }
-
-    if (auth) {
-      try {
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        const token = await userCred.user.getIdToken();
-        const userData = {
-          uid: userCred.user.uid,
-          email: userCred.user.email,
-          name: userCred.user.displayName || email.split('@')[0],
-          role: email.toLowerCase().includes('admin') ? "Administrator" : "Doctor"
-        };
-        setUser(userData);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        localStorage.setItem('auth_token', token);
-        return userData;
-      } catch (err) {
-        console.warn("Firebase Auth online login error, falling back to local simulation:", err);
-      }
-    }
-
-    // Local simulation login
-    const isAdm = email.toLowerCase().includes('admin');
-    const isCaretaker = email.toLowerCase().includes('ramesh') || email.toLowerCase().includes('caretaker');
-    const simulatedUser = {
-      uid: isAdm ? "admin_demo_01" : isCaretaker ? "caretaker_demo_01" : `usr_${Math.random().toString(36).substring(7)}`,
-      email: email,
-      name: isAdm ? "Administrator" : isCaretaker ? "Ramesh Sharma" : "Dr. Clinician",
-      role: isAdm ? "Administrator" : isCaretaker ? "Caretaker" : "Doctor",
-      phone: isCaretaker ? "+919876543210" : ""
-    };
-    const simulatedToken = isAdm ? "demo_admin_token" : isCaretaker ? "demo_caretaker_token" : "demo_doctor_token";
-    setUser(simulatedUser);
-    localStorage.setItem('auth_user', JSON.stringify(simulatedUser));
-    localStorage.setItem('auth_token', simulatedToken);
-    return simulatedUser;
   };
 
   const registerWithEmail = async (email, password, name, role = "Doctor", phone = "") => {
