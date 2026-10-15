@@ -323,6 +323,33 @@ def generate_sample_edf():
         logger.error(f"Sample EDF generation failed: {e}")
         return jsonify({"error": str(e)}), 500
 
+def resolve_recording_file_path(rec: dict) -> Path | None:
+    """Resolves the physical recording file path across Windows, Linux, and cloud environments."""
+    if not rec:
+        return None
+    raw_path_str = rec.get("localFilePath", "")
+    if raw_path_str:
+        p = Path(raw_path_str)
+        if p.exists():
+            return p
+
+    fname = rec.get("storedFilename") or rec.get("originalFilename") or (Path(raw_path_str).name if raw_path_str else "")
+    if not fname:
+        return None
+
+    candidates = [
+        Path(BASE_DIR).parent / "Dataset" / fname,
+        Path(BASE_DIR) / "Dataset" / fname,
+        Path("Dataset") / fname,
+        UPLOAD_DIR / fname,
+        Path(BASE_DIR).parent / "Dataset" / (fname if fname.endswith(".edf") else f"{fname}.edf"),
+        Path(BASE_DIR) / "data" / "chbmit" / fname,
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    return None
+
 @upload_bp.route("/download/<recording_id>", methods=["GET"])
 def download_recording_file(recording_id: str):
     """Allows downloading the raw recording file for verification."""
@@ -330,8 +357,8 @@ def download_recording_file(recording_id: str):
     if not rec:
         return jsonify({"error": "Recording not found."}), 404
 
-    file_path = Path(rec.get("localFilePath", ""))
-    if not file_path.exists():
+    file_path = resolve_recording_file_path(rec)
+    if not file_path or not file_path.exists():
         return jsonify({"error": "Recording file missing from server."}), 404
 
     return send_file(
@@ -364,8 +391,8 @@ def initialize_playback():
     if not rec:
         return jsonify({"error": f"Recording {recording_id} not found."}), 404
 
-    file_path = Path(rec.get("localFilePath", ""))
-    if not file_path.exists():
+    file_path = resolve_recording_file_path(rec)
+    if not file_path or not file_path.exists():
         return jsonify({
             "error": "The recording file was removed or is not available on server disk. Please re-upload.",
             "code": "FILE_MISSING"

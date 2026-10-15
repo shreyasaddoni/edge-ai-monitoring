@@ -58,40 +58,58 @@ def register():
         "name": name,
         "role": role,
         "phone": formatted_phone or phone,
+        "password": password,
         "createdAt": now_iso,
         "updatedAt": now_iso
     }
     db_client.set_document("users", uid, user_doc)
 
     token = f"token_{uid}"
+    # Return user object without sensitive password in response
+    safe_user = {k: v for k, v in user_doc.items() if k != "password"}
     return jsonify({
         "success": True,
         "message": "Account registered successfully.",
-        "user": user_doc,
+        "user": safe_user,
         "token": token
     }), 201
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    """Logs in an account with email and password."""
+    """Logs in an account with email and password strictly."""
     data = request.get_json() or {}
     email = data.get("email", "").strip().lower()
     password = data.get("password", "")
 
     if not email:
         return jsonify({"error": "Email is required."}), 400
+    if not password:
+        return jsonify({"error": "Password is required."}), 400
 
     # Check database
     all_users = db_client.query_collection("users")
     matched_user = None
     for u in all_users:
         if (u.get("email") or "").lower() == email:
-            matched_user = u
+            # Check password if stored
+            stored_pw = u.get("password")
+            if stored_pw and stored_pw != password:
+                return jsonify({"error": "Invalid email or password.", "code": "AUTH_FAILED"}), 401
+            matched_user = {k: v for k, v in u.items() if k != "password"}
             break
 
     if not matched_user:
-        # Check demo credentials
-        if email == "ramesh@epilepsycare.org":
+        # Check standard demonstration accounts
+        if email == "doctor@epilepsycare.org":
+            matched_user = {
+                "uid": "doctor_demo_01",
+                "email": email,
+                "name": "Dr. Sarah Jenkins",
+                "role": "Doctor",
+                "phone": "+919876543210"
+            }
+            token = "demo_doctor_token"
+        elif email == "ramesh@epilepsycare.org":
             matched_user = {
                 "uid": "caretaker_demo_01",
                 "email": email,
@@ -100,7 +118,7 @@ def login():
                 "phone": "+919876543210"
             }
             token = "demo_caretaker_token"
-        elif "admin" in email:
+        elif email in ("admin@epilepsycare.org", "admin@hospital.org"):
             matched_user = {
                 "uid": "admin_demo_01",
                 "email": email,
@@ -110,16 +128,10 @@ def login():
             }
             token = "demo_admin_token"
         else:
-            # Fallback for demonstration / local testing
-            matched_user = {
-                "uid": f"usr_{uuid.uuid4().hex[:8]}",
-                "email": email,
-                "name": email.split("@")[0],
-                "role": "Doctor",
-                "phone": ""
-            }
-            token = f"token_{matched_user['uid']}"
-            db_client.set_document("users", matched_user["uid"], matched_user)
+            return jsonify({
+                "error": "Invalid email or password. Please check your credentials or register a new account.",
+                "code": "AUTH_FAILED"
+            }), 401
     else:
         token = f"token_{matched_user.get('uid')}"
 
