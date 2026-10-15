@@ -48,10 +48,6 @@ backend/uploads/eeg/*
 !backend/uploads/eeg/.gitkeep
 !backend/data/.gitkeep
 
-# Large Datasets & EEG Recordings
-Dataset/
-*.edf
-
 # Logs & Debugging
 logs/
 *.log

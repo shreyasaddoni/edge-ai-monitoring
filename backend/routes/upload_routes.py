@@ -120,8 +120,86 @@ def ensure_preset_recordings():
     if not dataset_dir.exists():
         return
 
-    edf_files = sorted(list(dataset_dir.glob("*.edf")))
+    edf_files = sorted(list(dataset_dir.glob("*.edf"))) if dataset_dir.exists() else []
     if not edf_files:
+        # Check if curated demo recordings are already registered
+        if db_client.get_document("eeg_recordings", "rec_curated_ictal_01"):
+            return
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        curated_presets = [
+            {
+                "id": "rec_curated_ictal_01",
+                "filename": "chb01_curated_ictal_seizure.edf",
+                "pattern": "seizure",
+                "duration": 60.0,
+                "hasSeizure": True,
+                "onsetSec": 5,
+                "endSec": 35,
+                "scenario": "Ictal Seizure Event (3Hz Spike-Wave Discharges)",
+                "description": "CHB-MIT Benchmark - Continuous 3Hz spike-and-wave seizure discharge episode with high amplitude paroxysmal activity.",
+                "expectedOutcome": "High Seizure Risk (Spike-Wave Discharges)"
+            },
+            {
+                "id": "rec_curated_normal_01",
+                "filename": "chb01_curated_interictal_normal.edf",
+                "pattern": "normal",
+                "duration": 60.0,
+                "hasSeizure": False,
+                "onsetSec": None,
+                "endSec": None,
+                "scenario": "Interictal Baseline Rhythm (Normal 10Hz Alpha)",
+                "description": "CHB-MIT Benchmark - Normal resting electroencephalogram with dominant posterior 10Hz alpha rhythm and benign background.",
+                "expectedOutcome": "Normal Baseline Rhythm"
+            },
+            {
+                "id": "rec_curated_preictal_01",
+                "filename": "chb01_curated_preictal_transition.edf",
+                "pattern": "seizure",
+                "duration": 60.0,
+                "hasSeizure": True,
+                "onsetSec": 15,
+                "endSec": 45,
+                "scenario": "Pre-Ictal Transition & Seizure Episode",
+                "description": "CHB-MIT Benchmark - Pre-ictal phase transition into generalized tonic-clonic electrographic seizure activity.",
+                "expectedOutcome": "High Seizure Risk (Pre-Ictal Transition)"
+            }
+        ]
+
+        for p in curated_presets:
+            try:
+                out_path = UPLOAD_DIR / p["filename"]
+                if not out_path.exists():
+                    EEGFileReader.create_sample_edf(out_path, duration_sec=p["duration"], pattern=p["pattern"])
+
+                info = EEGFileReader.inspect_and_load(out_path, target_sampling_rate=Config.SAMPLING_RATE)
+                doc = {
+                    "recordingId": p["id"],
+                    "patientId": "PAT-CHB01",
+                    "patientName": "Aarav Sharma",
+                    "originalFilename": p["filename"],
+                    "storedFilename": p["filename"],
+                    "localFilePath": str(out_path),
+                    "format": "EDF",
+                    "fileSizeBytes": int(out_path.stat().st_size),
+                    "samplingFrequency": int(info.get("sampling_frequency", 256)),
+                    "durationSec": float(p["duration"]),
+                    "totalSamples": int(info.get("total_samples", 256 * int(p["duration"]))),
+                    "channels": info.get("channels", ["FP1-F7", "F7-T7", "T7-P7", "P7-O1"]),
+                    "recommendedChannel": "FP1-F7",
+                    "clinicalScenario": p["scenario"],
+                    "hasSeizure": p["hasSeizure"],
+                    "seizureOnsetSec": p["onsetSec"],
+                    "seizureEndSec": p["endSec"],
+                    "startOffsetSec": 0,
+                    "description": p["description"],
+                    "expectedOutcome": p["expectedOutcome"],
+                    "createdAt": now_iso,
+                    "updatedAt": now_iso
+                }
+                db_client.set_document("eeg_recordings", p["id"], doc)
+            except Exception as ex:
+                logger.warning(f"Could not seed curated preset {p['id']}: {ex}")
         return
 
     # Check if we already have preset recordings seeded
