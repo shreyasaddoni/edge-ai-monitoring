@@ -48,8 +48,8 @@ class EEGFileReader:
         if not MNE_AVAILABLE:
             raise RuntimeError("MNE-Python is required to read .edf files. Please install mne.")
 
-        # Read EDF file with mne (suppress verbose logs)
-        raw = mne.io.read_raw_edf(str(path), preload=True, verbose="ERROR")
+        # Read EDF file with mne (lazy header inspection, no upfront memory explosion)
+        raw = mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR")
 
         # Extract sampling frequency
         sfreq = int(round(raw.info["sfreq"]))
@@ -57,23 +57,16 @@ class EEGFileReader:
         total_samples = raw.n_times
         duration_sec = float(total_samples / sfreq) if sfreq > 0 else 0.0
 
-        # Resample if needed to target sampling rate
-        if sfreq != target_sampling_rate and target_sampling_rate > 0:
-            logger.info(f"Resampling EDF from {sfreq} Hz to {target_sampling_rate} Hz")
-            raw.resample(target_sampling_rate, verbose="ERROR")
-            sfreq = target_sampling_rate
-            total_samples = raw.n_times
-            duration_sec = float(total_samples / sfreq)
-
-        # Get channel signals as dictionary (scale from Volts to Microvolts typical in EEG)
-        # MNE loads in Volts, so 1 uV = 1e-6 V. Multiply by 1e6 to convert to uV.
-        data_matrix = raw.get_data() * 1e6
-
+        # Load channel data efficiently using float32 without duplicating the entire matrix
         channel_dict = {}
-        for idx, ch_name in enumerate(channels):
-            # Clean channel name (e.g. 'EEG FP1-F7' -> 'FP1-F7')
+        for ch_name in channels:
             clean_name = ch_name.replace("EEG ", "").replace("-REF", "").strip()
-            channel_dict[clean_name] = data_matrix[idx].astype(np.float64)
+            # Fetch single channel in float32 directly in microvolts
+            try:
+                ch_data = (raw.get_data(picks=[ch_name])[0] * 1e6).astype(np.float32)
+                channel_dict[clean_name] = ch_data
+            except Exception as e:
+                logger.warning(f"Error loading channel {ch_name}: {e}")
 
         # Annotations if any
         annotations_list = []
